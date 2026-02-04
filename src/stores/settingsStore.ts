@@ -58,7 +58,7 @@ export const useSettingsStore = defineStore('settings', {
       this.loading = true;
       try {
         this.settings.workingDays = days;
-        this.settings.updatedAt = new Date(); // This field doesn't exist in our interface, but we'll add it anyway
+        // Убираем попытку установить несуществующее поле updatedAt
         
         localStorage.setItem('hrms_system_settings', JSON.stringify(this.settings));
         this.error = null;

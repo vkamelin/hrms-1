@@ -91,12 +91,12 @@ export class LocalDataSource<T> implements DataSource<T> {
 
 // Заглушка для серверного API (реализация будет добавлена позже)
 export class RemoteDataSource<T> implements DataSource<T> {
-  private baseUrl: string;
-  private entityName: string;
+  private _baseUrl: string;
+  private _entityName: string;
   
   constructor(baseUrl: string, entityName: string) {
-    this.baseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
-    this.entityName = entityName;
+    this._baseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+    this._entityName = entityName;
   }
   
   async getAll(): Promise<T[]> {
@@ -105,7 +105,7 @@ export class RemoteDataSource<T> implements DataSource<T> {
     return [];
   }
   
-  async getById(id: string): Promise<T | null> {
+  async getById(_id: string): Promise<T | null> {
     // This would make an HTTP request in a real implementation
     console.warn('RemoteDataSource is not fully implemented yet');
     return null;
@@ -117,21 +117,30 @@ export class RemoteDataSource<T> implements DataSource<T> {
     return item;
   }
   
-  async update(id: string, item: Partial<T>): Promise<T> {
+  async update(_id: string, item: Partial<T>): Promise<T> {
     // This would make an HTTP request in a real implementation
     console.warn('RemoteDataSource is not fully implemented yet');
     return item as T;
   }
   
-  async delete(id: string): Promise<void> {
+  async delete(_id: string): Promise<void> {
     // This would make an HTTP request in a real implementation
     console.warn('RemoteDataSource is not fully implemented yet');
   }
   
-  async search(query: any): Promise<T[]> {
+  async search(_query: any): Promise<T[]> {
     // This would make an HTTP request in a real implementation
     console.warn('RemoteDataSource is not fully implemented yet');
     return [];
+  }
+  
+  // Добавляем геттеры для доступа к приватным полям
+  get baseUrl(): string {
+    return this._baseUrl;
+  }
+  
+  get entityName(): string {
+    return this._entityName;
   }
 }
 

@@ -1,16 +1,16 @@
 <template>
   <div class="kanban-board">
     <div class="board-header">
-      <h2>{{ board.name }}</h2>
+      <h2>{{ board?.name }}</h2>
       <div class="board-actions">
         <button @click="addColumn" class="btn btn-primary">Добавить колонку</button>
       </div>
     </div>
     
     <div class="board-columns">
-      <div 
-        v-for="column in orderedColumns" 
-        :key="column.id" 
+      <div
+        v-for="column in orderedColumns"
+        :key="column.id"
         class="column"
         :style="{ backgroundColor: column.color ? `${column.color}20` : '#f0f0f0' }"
       >
@@ -19,7 +19,7 @@
           <span class="task-count">{{ column.tasks.length }}</span>
         </div>
         
-        <div 
+        <div
           class="task-list"
           :id="`column-${column.id}`"
           @dragover.prevent
@@ -59,18 +59,18 @@
           <div class="task-details">
             <div class="detail-item">
               <label>Статус:</label>
-              <select 
-                :value="selectedTask.status" 
-                @change="updateTaskStatus(selectedTask.id, $event.target.value)"
+              <select
+                :value="selectedTask.status"
+                @change="onStatusChange"
               >
-                <option v-for="col in board.columns" :key="col.id" :value="col.id">{{ col.title }}</option>
+                <option v-for="col in board?.columns" :key="col.id" :value="col.id">{{ col.title }}</option>
               </select>
             </div>
             <div class="detail-item">
               <label>Приоритет:</label>
-              <select 
-                :value="selectedTask.priority" 
-                @change="updateTaskPriority(selectedTask.id, $event.target.value)"
+              <select
+                :value="selectedTask.priority"
+                @change="onPriorityChange"
               >
                 <option value="low">Низкий</option>
                 <option value="medium">Средний</option>
@@ -80,9 +80,9 @@
             </div>
             <div class="detail-item">
               <label>Исполнитель:</label>
-              <select 
-                :value="selectedTask.assigneeId || ''" 
-                @change="updateTaskAssignee(selectedTask.id, $event.target.value)"
+              <select
+                :value="selectedTask.assigneeId || ''"
+                @change="onAssigneeChange"
               >
                 <option value="">Не назначен</option>
                 <option v-for="employee in allEmployees" :key="employee.id" :value="employee.id">
@@ -92,18 +92,18 @@
             </div>
             <div class="detail-item">
               <label>Дедлайн:</label>
-              <input 
-                type="date" 
-                :value="formatDateForInput(selectedTask.deadline)" 
-                @change="updateTaskDeadline(selectedTask.id, $event.target.value)"
+              <input
+                type="date"
+                :value="formatDateForInput(selectedTask.deadline)"
+                @change="onDeadlineChange"
               />
             </div>
             <div class="detail-item">
               <label>Теги:</label>
-              <input 
-                type="text" 
-                :value="selectedTask.tags.join(', ')" 
-                @change="updateTaskTags(selectedTask.id, $event.target.value)"
+              <input
+                type="text"
+                :value="selectedTask.tags.join(', ')"
+                @change="onTagsChange"
                 placeholder="Тег1, Тег2, ..."
               />
             </div>
@@ -118,7 +118,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useTaskStore } from '../stores/taskStore';
 import { useEmployeeStore } from '../stores/employeeStore';
-import { TaskCard, KanbanBoard, KanbanColumn } from '../models/Task';
+import { TaskCard } from '../models/Task';
 
 const props = defineProps<{
   boardId: string;
@@ -188,41 +188,72 @@ const closeTaskDetails = () => {
   selectedTask.value = null;
 };
 
-const updateTaskStatus = async (taskId: string, newStatus: string) => {
-  if (selectedTask.value) {
+const onStatusChange = (event: Event) => {
+  const target = event.target as HTMLSelectElement;
+  if (selectedTask.value && target) {
+    const newStatus = target.value;
     selectedTask.value.status = newStatus;
-    await taskStore.updateTask(taskId, { status: newStatus });
+    updateTaskStatus(selectedTask.value.id, newStatus);
   }
 };
 
-const updateTaskPriority = async (taskId: string, newPriority: string) => {
-  if (selectedTask.value) {
-    selectedTask.value.priority = newPriority as any;
-    await taskStore.updateTask(taskId, { priority: newPriority });
+const onPriorityChange = (event: Event) => {
+  const target = event.target as HTMLSelectElement;
+  if (selectedTask.value && target) {
+    const newPriority = target.value as 'low' | 'medium' | 'high' | 'urgent';
+    selectedTask.value.priority = newPriority;
+    updateTaskPriority(selectedTask.value.id, newPriority);
   }
 };
 
-const updateTaskAssignee = async (taskId: string, newAssigneeId: string) => {
-  if (selectedTask.value) {
-    selectedTask.value.assigneeId = newAssigneeId || undefined;
-    await taskStore.updateTask(taskId, { assigneeId: newAssigneeId || null });
+const onAssigneeChange = (event: Event) => {
+  const target = event.target as HTMLSelectElement;
+  if (selectedTask.value && target) {
+    const newAssigneeId = target.value || undefined;
+    selectedTask.value.assigneeId = newAssigneeId;
+    updateTaskAssignee(selectedTask.value.id, newAssigneeId);
   }
+};
+
+const onDeadlineChange = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  if (selectedTask.value && target) {
+    const newDeadline = target.value ? new Date(target.value) : undefined;
+    selectedTask.value.deadline = newDeadline;
+    updateTaskDeadline(selectedTask.value.id, target.value);
+  }
+};
+
+const onTagsChange = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  if (selectedTask.value && target) {
+    const tagsString = target.value;
+    const tags = tagsString.split(',').map(tag => tag.trim()).filter(tag => tag);
+    selectedTask.value.tags = tags;
+    updateTaskTags(selectedTask.value.id, tagsString);
+  }
+};
+
+const updateTaskStatus = async (taskId: string, newStatus: string) => {
+  await taskStore.updateTask(taskId, { status: newStatus });
+};
+
+const updateTaskPriority = async (taskId: string, newPriority: 'low' | 'medium' | 'high' | 'urgent') => {
+  await taskStore.updateTask(taskId, { priority: newPriority });
+};
+
+const updateTaskAssignee = async (taskId: string, newAssigneeId: string | undefined) => {
+  await taskStore.updateTask(taskId, { assigneeId: newAssigneeId });
 };
 
 const updateTaskDeadline = async (taskId: string, newDeadline: string) => {
-  if (selectedTask.value) {
-    const date = newDeadline ? new Date(newDeadline) : undefined;
-    selectedTask.value.deadline = date;
-    await taskStore.updateTask(taskId, { deadline: date });
-  }
+  const date = newDeadline ? new Date(newDeadline) : undefined;
+  await taskStore.updateTask(taskId, { deadline: date });
 };
 
 const updateTaskTags = async (taskId: string, tagsString: string) => {
-  if (selectedTask.value) {
-    const tags = tagsString.split(',').map(tag => tag.trim()).filter(tag => tag);
-    selectedTask.value.tags = tags;
-    await taskStore.updateTask(taskId, { tags });
-  }
+  const tags = tagsString.split(',').map(tag => tag.trim()).filter(tag => tag);
+  await taskStore.updateTask(taskId, { tags });
 };
 
 const addColumn = async () => {
@@ -245,7 +276,7 @@ const onDragStart = (event: DragEvent, taskId: string) => {
   event.dataTransfer?.setData('text/plain', taskId);
 };
 
-const onDrop = async (event: Event, columnId: string) => {
+const onDrop = async (event: DragEvent, columnId: string) => {
   event.preventDefault();
   if (draggedTaskId.value) {
     await taskStore.moveTaskToColumn(draggedTaskId.value, columnId);

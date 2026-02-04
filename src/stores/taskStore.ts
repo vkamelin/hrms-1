@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { TaskCard, KanbanBoard, KanbanColumn, Comment, Attachment, TaskHistory } from '../models/Task';
+import { TaskCard, KanbanBoard, KanbanColumn, TaskHistory } from '../models/Task';
 
 export const useTaskStore = defineStore('task', {
   state: () => ({

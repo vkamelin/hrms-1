@@ -89,8 +89,8 @@ export class SessionStorageAdapter<T> implements StorageAdapter<T> {
 // Фабрика хранилищ
 export class StorageFactory {
   static create<T>(
-    type: 'localStorage' | 'sessionStorage', 
-    prefix: string = ''
+    type: 'localStorage' | 'sessionStorage',
+    _prefix: string = ''
   ): StorageAdapter<T> {
     let adapter: StorageAdapter<T>;
     
